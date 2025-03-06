@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Player</title>
+    <link rel="stylesheet" href="styles.css">
+    <title>Audio Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black; /* Black background */
+            color: white;
+            text-align: center;
+            padding: 20px;
+            transition: background-color 3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+            overflow: hidden; /* Keep the stars confined to the screen */
+        }
+
+        /* Twinkling stars effect */
+        @keyframes twinkle {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.3;
+            animation: twinkle 2s infinite;
+            pointer-events: none; /* Prevent interaction with the stars */
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: absolute;
+            top: 10px;
+            flex-wrap: wrap;
+            z-index: 1; /* Ensure buttons are on top of stars */
+        }
+
+        .button, .nav-button {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white; /* White outline */
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+            transition: color 0.3s ease;
+            z-index: 2; /* Keep buttons above the stars */
+        }
+
+        /* Keyframe animation for liquid-like filling effect */
+        .button::after, .nav-button::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ff69b4; /* Pink color */
+            transform: translateY(100%) scaleY(0); /* Start from below with no height */
+            border-radius: 5px 5px 0 0; /* Curved top corners */
+            transition: transform 0.8s cubic-bezier(0.3, 0.6, 0.5, 1); /* Smoother, more liquid-like movement */
+            z-index: -1; /* Keep the liquid effect behind the button */
+        }
+
+        /* Animation trigger on hover: Fluid-like animation */
+        .button:hover::after, .nav-button:hover::after {
+            transform: translateY(0) scaleY(1); /* Fully fill the button */
+        }
+
+        .button:hover, .nav-button:hover {
+            color: white;
+        }
+
+        /* Responsive design for smaller screens */
+        @media screen and (max-width: 768px) {
+            .essay-box {
+                width: 80%;
+                font-size: 16px;
+            }
+            .button-container {
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            .button, .nav-button {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .essay-box {
+                width: 90%;
+                font-size: 14px;
+            }
+            .button-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .button, .nav-button {
+                padding: 12px 25px;
+                font-size: 14px;
+            }
+        }
+
+        /* Style for the heading */
+        .heading {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: white;
+        }
+
+        /* Essay box styling with black text */
+        .essay-box {
+            width: 60%;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            font-size: 18px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            margin-top: 40px;
+            z-index: 2; /* Ensure the essay box is above everything else */
+            color: black; /* Set essay text color to black */
+        }
+
+        .essay-box.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Stars Background -->
+    <div class="stars"></div>
+    
+    <div class="button-container">
+        <button class="button" onclick="playAudio()">Play</button>
+        <button class="button" onclick="stopAudio()">Stop</button>
+        <button class="nav-button" onclick="goBack()">Back</button>
+        <button class="nav-button" onclick="goNext()">Next</button>
+    </div>
+    
+    <!-- Heading added below the buttons -->
+    <h1 class="heading">You're beautiful like the song being played</h1>
+
+    <div class="essay-box show" id="essayBox">
+        <p id="essayText"></p>
+    </div>
+    
+    <audio id="audioPlayer">
+        <source src="converted_audio.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <script>
+        const audio = document.getElementById("audioPlayer");
+        const essayText = document.getElementById("essayText");
+        const essayBox = document.getElementById("essayBox");
+        
+        const essayParts = [
+            "The Girl Who Stole My Heart",
+            "You are the most amazing girl I have ever met. You are beautiful, not just because of how you look, but because of who you are. From the moment I saw you, I knew you were special. Your smile can brighten anyone’s day, and your eyes seem to hold a million stories.",
+            "When you talk, your voice is soft and kind, and every word you say feels important. You make even normal days feel special, like when you laugh at something simple or share a funny story. Just being around you makes everything better.",
+            "But you’re not just beautiful—you have the kindest heart. You always listen when people talk, and you care about others in a way that not many people do. You notice the little things, like when someone is feeling sad, and you always try to cheer them up.",
+            "You find joy in the smallest things—reading a good book, watching the sunset—and you remind me that happiness isn’t just about big things, but also about the little moments.",
+            "You are also so strong. Even when things are tough, you keep going and don’t let anything bring you down. You never give up, and that’s something I really admire about you.",
+            "You are the kind of person who makes others want to be better, just by being yourself.",
+            "I didn’t choose to like you—it just happened. You took my heart with your kindness, your laugh, and the way you see the world. Being around you makes me happy, and I feel so lucky just to know you.",
+            "You are more than just a pretty girl. You are special, kind, and strong. If I could spend every day with you, just watching you make the world a better place, I would be the happiest person ever.",
+            "No matter what happens, I just want you to know that you will always have a special place in my heart.",
+            "-End (Sorry if it's a little too bland)"
+        ];
+        
+        let currentPart = 0;
+        
+        function updateEssay() {
+            essayBox.classList.remove("show");
+            setTimeout(() => {
+                essayText.innerText = essayParts[currentPart];
+                essayBox.classList.add("show");
+            }, 500);
+        }
+        
+        function playAudio() {
+            audio.play();
+        }
+
+        function stopAudio() {
+            let fadeOut = setInterval(() => {
+                if (audio.volume > 0.05) {
+                    audio.volume -= 0.05;
+                } else {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.volume = 1;
+                    clearInterval(fadeOut);
+                }
+            }, 100);
+        }
+
+        function goBack() {
+            if (currentPart > 0) {
+                currentPart--;
+                updateEssay();
+            }
+        }
+
+        function goNext() {
+            if (currentPart < essayParts.length - 1) {
+                currentPart++;
+                updateEssay();
+            }
+        }
+        
+        updateEssay();
+        </script>
+        <script src="scripts.js"></script>
+    
+</body>
+</html>
